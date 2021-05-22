@@ -1,7 +1,7 @@
 require 'faraday'
 require 'json'
 
-module Pickles
+module Picklecraft
   class Client
     def initialize(verbose: false, server: 'localhost', port: 3200)
       @verbose = verbose
@@ -12,6 +12,16 @@ module Pickles
 
     def players
       parse(get('/players'))
+    end
+
+    def find_player(name:)
+      player = parse(get("/players/#{name}"))
+
+      puts "player = #{player}"
+
+      raise "#{name} isn't on the server, only found #{players.map { |p| p['name'] }}" unless player['name']
+
+      player
     end
 
     def place_block(params)
