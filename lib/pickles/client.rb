@@ -3,11 +3,10 @@ require 'json'
 
 module Pickles
   class Client
-    def initialize(verbose: false)
+    def initialize(verbose: false, server: 'localhost', port: 3200)
       @verbose = verbose
       @client = Faraday.new(
-        url: 'http://localhost:3200'
-        # params: { access_token: ENV['ROLLBAR_READ_TOKEN'] },
+        url: "http://#{server}:#{port}"
       )
     end
 
