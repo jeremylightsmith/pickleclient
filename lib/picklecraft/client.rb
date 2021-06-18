@@ -64,7 +64,7 @@ module Picklecraft
       end
     end
 
-    def listen
+    def wait_for_events
       puts 'Listening for events, type ctrl-c to stop...'
       @threads.each(&:join)
     end

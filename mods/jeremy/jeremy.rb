@@ -52,7 +52,7 @@ p.on_command do |event|
   end
 end
 
-p.listen
+p.wait_for_events
 
 # cage(p, pos, 'NETHERITE_BLOCK')
 # cage(p, pos, 'DIAMOND_BLOCK')
