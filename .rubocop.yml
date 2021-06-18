@@ -1,0 +1,19 @@
+AllCops:
+  NewCops: enable
+
+Metrics/MethodLength:
+  Max: 11
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Naming/MethodParameterName:
+  MinNameLength: 1
+
+Metrics/AbcSize:
+  Max: 21
+
+

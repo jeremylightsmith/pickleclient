@@ -1,10 +1,12 @@
 require 'faraday'
 require 'json'
+require 'colorize'
 
 module Picklecraft
   class Client
-    def initialize(verbose: false, server: 'localhost', port: 3200)
+    def initialize(verbose: false, server: 'localhost', port: 3200, exit_on_error: true)
       @verbose = verbose
+      @exit_on_error = exit_on_error
       @server = server
       @port = port
       @client = Faraday.new(
@@ -14,38 +16,42 @@ module Picklecraft
     end
 
     def players
-      parse(get('/players'))
+      rpc(method: :getPlayers).map { |p| Player.new(p) }
     end
 
     def player(name:)
-      player = parse(post('/player', name: name))
-
-      raise "#{name} isn't on the server, only found #{players.map { |p| p['name'] }}" unless player['name']
-
-      player
+      Player.new(rpc(method: 'getPlayer', name: name))
     end
 
-    def place_block(type:, x:, y:, z:)
-      post('/place_block', type: type, x: x, y: y, z: z)
+    def place_block(type:, position:)
+      rpc(method: 'placeBlock', type: type, position: position)
+    end
+
+    def place_blocks(type:, from:, to:)
+      rpc(method: 'placeBlocks', type: type, fromPosition: from, toPosition: to)
+    end
+
+    def place_blocks_in_line(type:, position:, rotation:, length:)
+      length.times do |_i|
+        position = increment_position_in_direction(position, rotation, 1)
+        place_block(type: type, position: position)
+      end
+    end
+
+    def get_blocks(from:, to:)
+      rpc(method: 'getBlocks', fromPosition: from, toPosition: to)
     end
 
     def nearby_entities(player_name:, range:)
-      parse(post('/nearby_entities', player_name: player_name, range: range))
+      rpc(method: 'getNearbyEntities', playerName: player_name, range: range)
     end
 
-    def get(path, params = {})
-      puts "GET #{path}" if @verbose
-      @client.get(path, params).body
+    def set_day_time(time)
+      rpc(method: 'setDayTime', time: time)
     end
 
-    def post(path, body = {})
-      puts "POST #{path} : #{body}" if @verbose
-      @client.post(path, body.to_json).body
-    end
-
-    def put(path, body = {})
-      puts "PUT #{path} : #{body}" if @verbose
-      @client.put(path, body.to_json).body
+    def lift_boot
+      rpc(method: 'liftBoot')
     end
 
     def on_command
@@ -65,16 +71,43 @@ module Picklecraft
 
     private
 
-    def check(response)
+    def increment_position_in_direction(pos, rotation, distance)
+      [
+        pos[0] - distance * Math.sin(to_radians(rotation)),
+        pos[1],
+        pos[2] + distance * Math.cos(to_radians(rotation))
+      ]
+    end
+
+    def to_radians(angle)
+      angle / 180.0 * Math::PI
+    end
+
+    def rpc(body)
+      path = '/rpc'
+      puts "POST #{path} : #{body}" if @verbose
+      response = @client.post(path, body.to_json)
+
       if response.status == 200
-        response.body
+        JSON.parse(response.body)
       else
-        raise "Error: #{response.body}"
+        handle_error(response)
       end
     end
 
-    def parse(json)
-      JSON.parse(json)
+    def handle_error(response)
+      error = begin
+        JSON.parse(response.body)['error']
+      rescue StandardError
+        response.body
+      end
+
+      if @exit_on_error # rubocop:disable Style/GuardClause
+        puts "Error: #{error}".red
+        exit(1)
+      else
+        raise "Error: #{error}"
+      end
     end
   end
 end

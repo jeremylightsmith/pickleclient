@@ -1,4 +1,4 @@
-require_relative '../lib/picklecraft/client'
+require_relative '../../lib/picklecraft'
 
 def cage(p, pos, type)
   puts "Building a cage around #{pos} of #{type}"
@@ -14,7 +14,23 @@ def cage(p, pos, type)
   end
 end
 
-p = Picklecraft::Client.new(server: 'localhost', verbose: true)
+p = Picklecraft::Client.new(server: 'flarion.local', verbose: true, exit_on_error: true)
+
+puts "players = #{p.players}"
+
+player = p.player(name: 'jeremylightsmith')
+puts "player = #{player}"
+
+p.set_day_time 'day'
+
+p.place_block(type: 'gold_block', position: player.position)
+p.place_blocks(type: 'gold_block',
+               from: [player.x, player.y + 2, player.z],
+               to: [player.x, player.y + 100, player.z])
+p.place_blocks_in_line(type: 'iron_ore',
+                       position: player.position,
+                       rotation: player.rotation[1],
+                       length: 10)
 
 # mika = p.player name: 'mikalightsmith'
 # jeremy = p.player name: 'jeremylightsmith'

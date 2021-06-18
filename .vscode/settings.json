@@ -1,0 +1,14 @@
+{
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "ruby.rubocop.useBundler": true,
+  "ruby.codeCompletion": "rcodetools",
+  "ruby.useLanguageServer": true, // use the internal language server (see below)
+  "ruby.lint": {
+    "rubocop": {
+      "useBundler": true // enable rubocop via bundler
+    },
+  },
+  "ruby.format": "rubocop",
+  "files.autoSave": "onFocusChange", // use rubocop for formatting
+}
